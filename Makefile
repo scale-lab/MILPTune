@@ -10,3 +10,6 @@ run-checks :
 	flake8 .
 	mypy .
 	CUDA_VISIBLE_DEVICES='' pytest -v --color=yes --doctest-modules tests/ milptune/
+
+install:
+	pip install -e '.[dev]' 

@@ -44,9 +44,9 @@ setup(
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
     keywords="",
-    url="https://github.com/scale-lab/MILPTune",
-    author="Allen Institute for Artificial Intelligence",
-    author_email="contact@allenai.org",
+    url="https://anonymous.cc",
+    author="Anonymous",
+    author_email="contact@anonymous.cc",
     license="Apache",
     packages=find_packages(
         exclude=["*.tests", "*.tests.*", "tests.*", "tests"],

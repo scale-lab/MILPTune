@@ -23,24 +23,24 @@ Contents
    :hidden:
    :caption: Development
 
-   License <https://raw.githubusercontent.com/allenai/MILPTune/main/LICENSE>
+   License <https://raw.githubusercontent.com/anonymous/MILPTune/main/LICENSE>
    CONTRIBUTING
-   GitHub Repository <https://github.com/scale-lab/MILPTune>
+   GitHub Repository <https://github.com/anonymous/MILPTune>
 
 Team
 ----
 
-**milptune** is developed and maintained by the AllenNLP team, backed by
-`the Allen Institute for Artificial Intelligence (AI2) <https://allenai.org/>`_.
-AI2 is a non-profit institute with the mission to contribute to humanity through high-impact AI research and engineering.
+**milptune** is developed and maintained by the Anonymous team, backed by
+`Anonymous <https://anonymous.cc/>`_.
+Anynymous is ......
 To learn more about who specifically contributed to this codebase, see
-`our contributors <https://github.com/scale-lab/MILPTune/graphs/contributors>`_ page.
+`our contributors <https://github.com/anonymous/MILPTune/graphs/contributors>`_ page.
 
 License
 -------
 
 **milptune** is licensed under `Apache 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`_.
-A full copy of the license can be found `on GitHub <https://github.com/scale-lab/MILPTune/blob/main/LICENSE>`_.
+A full copy of the license can be found `on GitHub <https://github.com/anonymous/MILPTune/blob/main/LICENSE>`_.
 
 Indices and tables
 ------------------

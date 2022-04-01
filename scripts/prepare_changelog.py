@@ -27,7 +27,7 @@ def main():
     lines.insert(insert_index, "\n")
     lines.insert(
         insert_index + 1,
-        f"## [v{VERSION}](https://github.com/scale-lab/MILPTune/releases/tag/v{VERSION}) - "
+        f"## [v{VERSION}](https://github.com/anonymous/MILPTune/releases/tag/v{VERSION}) - "
         f"{datetime.now().strftime('%Y-%m-%d')}\n",
     )
 

@@ -13,10 +13,10 @@ pip install milptune
 
 ## Installing from source
 
-To install **milptune** from source, first clone [the repository](https://github.com/scale-lab/MILPTune):
+To install **milptune** from source, first clone [the repository](https://github.com/anonymous/MILPTune):
 
 ```bash
-git clone https://github.com/scale-lab/MILPTune.git
+git clone https://github.com/anonymous/MILPTune.git
 cd MILPTune
 ```
 

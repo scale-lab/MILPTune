@@ -1,10 +1,12 @@
 import argparse
 import pathlib
+import pickle
+
+from bson.binary import Binary
+from pymongo import MongoClient
+
 from milptune.features.A import get_A, get_mapping
 from milptune.version import VERSION
-from pymongo import MongoClient
-import pickle
-from bson.binary import Binary
 
 
 class CapitalisedHelpFormatter(argparse.ArgumentDefaultsHelpFormatter):
@@ -30,9 +32,6 @@ if __name__ == '__main__':
     instances_path = pathlib.Path(args.data_dir)
     training_instances = list(instances_path.glob('train/*.mps.gz'))
     validation_instances = list(instances_path.glob('valid/*.mps.gz'))
-
-    X_train = []
-    X_valid = []
 
     dataset_name = instances_path.stem
     client = MongoClient(host='20.232.144.167')

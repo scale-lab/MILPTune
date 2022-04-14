@@ -34,13 +34,23 @@ if __name__ == '__main__':
     validation_instances = list(instances_path.glob('valid/*.mps.gz'))
 
     dataset_name = instances_path.stem
-    client = MongoClient(host='20.232.144.167')
+    uri = "mongodb://%s:%s@%s:%s" % ('milptune', 'MILP*tune2023', '20.25.127.142', 31331)
+    client = MongoClient(uri)
     db = client.milptunedb
-    dataset = db[dataset_name]
+    dataset = db['milptune_metadata']
 
     # primer to just focus on common matrix coeficients
     vars_index, conss_index = get_mapping(training_instances[0])
+    dataset.insert_one(
+        {
+            dataset_name: {
+                'vars_index': vars_index,
+                'conss_index': conss_index
+            }
+        }
+    )
 
+    dataset = db[dataset_name]
     for instance in training_instances:
         A = get_A(instance, vars_index, conss_index)
         dataset.insert_one(

@@ -1,7 +1,8 @@
+from collections import deque
+
 import numpy as np
 import pandas as pd
 from pyscipopt import Model
-from collections import deque
 from scipy.sparse import coo_matrix
 
 

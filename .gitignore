@@ -51,3 +51,8 @@ site/
 
 # project-specific
 smac3-output*
+*.csv
+*.json
+*.txt
+*.npy
+*.png

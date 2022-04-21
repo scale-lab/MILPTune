@@ -1,12 +1,10 @@
 import argparse
 
-import pyscipopt
-
 from pymongo import MongoClient
-from pyscipopt import Model as SCIPModel
-
 
 from milptune.version import VERSION
+from milptune.scip.solver import solve_milp
+from milptune.db.connections import get_client
 
 
 class CapitalisedHelpFormatter(argparse.ArgumentDefaultsHelpFormatter):
@@ -14,26 +12,6 @@ class CapitalisedHelpFormatter(argparse.ArgumentDefaultsHelpFormatter):
         if not prefix:
             prefix = 'Usage: '
             return super(CapitalisedHelpFormatter, self).add_usage(usage, actions, groups, prefix)
-
-
-def solve_milp(instance):
-    model = SCIPModel()
-    model.readProblem(instance)
-    model.setPresolve(pyscipopt.SCIP_PARAMSETTING.OFF)
-    model.setHeuristics(pyscipopt.SCIP_PARAMSETTING.OFF)
-    model.disablePropagation()
-    model.setParam('limits/time', 15 * 60)
-    model.hideOutput()
-
-    model.optimize()
-
-    # solution
-    sol = model.getBestSol()
-    primal = model.getPrimalbound()
-    dual = model.getDualbound()
-    time = model.getSolvingTime()
-
-    return primal - dual, time
 
 
 if __name__ == '__main__':
@@ -50,13 +28,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     print('connecing to db ..')
-    uri = "mongodb://%s:%s@%s:%s" % ('milptune', 'MILP*tune2023', '20.25.127.142', 31331)
-    client = MongoClient(uri)
+    client = get_client()
     db = client.milptunedb
     dataset = db[args.dataset_name]
     print('connected to db ..')
 
-    cost, time = solve_milp(args.instance)
+    cost, time = solve_milp(instance=args.instance)
 
     r = dataset.find_one({'path': args.instance})
     defaut_config = {

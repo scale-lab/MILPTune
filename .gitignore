@@ -56,3 +56,6 @@ smac3-output*
 *.txt
 *.npy
 *.png
+*.joblib
+*.gz
+*.env

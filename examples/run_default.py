@@ -1,10 +1,8 @@
 import argparse
 
-from pymongo import MongoClient
-
-from milptune.version import VERSION
-from milptune.scip.solver import solve_milp
 from milptune.db.connections import get_client
+from milptune.scip.solver import solve_milp
+from milptune.version import VERSION
 
 
 class CapitalisedHelpFormatter(argparse.ArgumentDefaultsHelpFormatter):

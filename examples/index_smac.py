@@ -5,14 +5,14 @@ from ConfigSpace.hyperparameters import (
     UniformFloatHyperparameter,
     UniformIntegerHyperparameter,
 )
-from pymongo import MongoClient
 from smac.configspace import ConfigurationSpace
 from smac.runhistory.runhistory import RunHistory
+
+from milptune.db.connections import get_client
 
 if __name__ == '__main__':
     data_path = pathlib.Path('.')
     workers_paths = list(data_path.glob('smac3*/run_*'))
-    
     
     params = [
         # Branching
@@ -46,7 +46,7 @@ if __name__ == '__main__':
         cs.add_hyperparameters(params)
         runhistory.load_json(rh_path, cs)
 
-        client = MongoClient(host='20.232.144.167')
+        client = get_client()
         db = client.milptunedb
         
         print(worker_path)

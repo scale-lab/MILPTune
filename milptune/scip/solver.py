@@ -1,5 +1,4 @@
 import pyscipopt
-
 from pyscipopt import Model as SCIPModel
 
 

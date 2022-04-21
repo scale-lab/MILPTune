@@ -1,14 +1,12 @@
-from distutils.command.config import config
-import joblib
 import metric_learn
+import numpy as np
 from joblib import load
+from pymongo import MongoClient
+from sklearn.neighbors import KNeighborsTransformer
+
+from milptune.db.connections import get_client
 from milptune.db.helpers import from_mongo_binary, to_mongo_binary
 from milptune.features.A import get_A
-from pymongo import MongoClient
-import numpy as np
-import pickle
-from sklearn.neighbors import KNeighborsTransformer
-from bson.binary import Binary
 
 
 def _check_(test, array):
@@ -22,8 +20,7 @@ def get_configuration_parameters(
         n_configs=5
         ):
     # 0. Connect to database
-    uri = "mongodb://%s:%s@%s:%s" % ('milptune', 'MILP*tune2023', '20.25.127.142', 31331)
-    client = MongoClient(uri)
+    client = get_client()
     db = client.milptunedb
     dataset = db['milptune_metadata']
 
@@ -54,9 +51,6 @@ def get_configuration_parameters(
         A = from_mongo_binary(instance['A_mlkr'])
         X_mlkr_trained.append(A)
     X_mlkr_trained = np.vstack(X_mlkr_trained)
-    print(X_mlkr_trained.shape)
-    
-    print(_check_(X_mlkr.flatten(), X_mlkr_trained))
 
     # 4. Run knn
     transformer = KNeighborsTransformer(n_neighbors=n_configs, mode='distance', n_jobs=-1)

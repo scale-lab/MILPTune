@@ -55,7 +55,7 @@ def get_configuration_parameters(
     # 4. Run knn
     transformer = KNeighborsTransformer(n_neighbors=n_configs, mode='distance', n_jobs=-1)
     transformer.fit(X_mlkr_trained)
-    _, neighbors = transformer.kneighbors(X_mlkr)
+    distances, neighbors = transformer.kneighbors(X_mlkr, return_distance=True)
     neighbors = X_mlkr_trained[neighbors[0],:]    
     neighbors = list(map(lambda n: to_mongo_binary(n.flatten()), neighbors))
 
@@ -67,6 +67,8 @@ def get_configuration_parameters(
     configs = [item for sublist in configs for item in sublist]
 
     # 6. Suggest `n_configs` configurations with lowest cost from all neighbors
-    suggested_configs = sorted(configs, key=lambda c: c['cost'])
+    suggested = zip(configs, distances.flatten())
+    suggested = sorted(suggested, key=lambda c: c[0]['cost'])
+    suggested_configs, distances = zip(*suggested)
 
-    return suggested_configs[:n_configs]
+    return suggested_configs[:n_configs], distances

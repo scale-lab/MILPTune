@@ -11,7 +11,12 @@ from smac.scenario.scenario import Scenario
 from milptune.scip.solver import solve_milp
 
 
-def optimize(instance_file):
+def _solve_(params, instance):
+    _, cost, _ = solve_milp(params, instance)
+    return cost
+
+
+def optimize(instance_file, runcount_limit=8):
     # Configuration
     cs = ConfigurationSpace()
     params = [
@@ -42,9 +47,9 @@ def optimize(instance_file):
     # Scenario object
     scenario = Scenario(
         {
-            'run_obj': 'quality',       # we optimize quality (alternatively runtime)
-            'runcount-limit': 8,        # max. number of function evaluations
-            'cs': cs,                   # configuration space
+            'run_obj': 'quality',               # we optimize quality (alternatively runtime)
+            'runcount-limit': runcount_limit,   # max. number of function evaluations
+            'cs': cs,                           # configuration space
             'deterministic': True,
             'instances': [[instance_file]],
         }
@@ -52,7 +57,7 @@ def optimize(instance_file):
 
     seed = np.random.randint(1000000, 9999999)
     smac = SMAC4HPO(
-        scenario=scenario, tae_runner=solve_milp,
+        scenario=scenario, tae_runner=_solve_,
         rng=np.random.RandomState(seed), run_id=seed)
     
     try:

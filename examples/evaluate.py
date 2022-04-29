@@ -1,11 +1,13 @@
-from pprint import pprint
-import json
 import argparse
-from milptune.configurator.knn import get_configuration_parameters
-from milptune.version import VERSION
-from multiprocessing import Process
-from milptune.scip.solver import solve_milp
+import json
 import os
+from multiprocessing import Process
+
+from milptune.configurator.knn import get_configuration_parameters
+from milptune.scip.solver import solve_milp
+from milptune.smac.hpo import optimize
+from milptune.version import VERSION
+
 
 class CapitalisedHelpFormatter(argparse.ArgumentDefaultsHelpFormatter):
     def add_usage(self, usage, actions, groups, prefix=None):
@@ -34,11 +36,28 @@ def incumbent():
         "separating/minorthoroot": 0.9071676731109619, 
         "separating/poolfreq": 48058}
 
-def run(params, instance, output_file, source, rank=1, expected_cost=None):
+def run_smac(instance_file, output_file):
+    restore_incument = []
+    for k, v in incumbent().items():
+        restore_incument.append(f'{k}={v}')
+
+    _, suggested_configs = optimize(instance_file, runcount_limit=5)
+
+    with open(output_file, 'a') as f:
+        for rank, config in enumerate(suggested_configs):
+            params_str = json.dumps(str(config['params']))
+            expected_cost = config['cost']
+            cost = config['cost']
+            time = config['time']
+            line = f'smac;{rank};{expected_cost};{cost};{time};{params_str};None\n'
+            f.write(line)
+
+
+def run(params, instance, output_file, source, rank=1, expected_cost=None, distance=None):
     _, cost, time = solve_milp(params=params, instance=instance)
     with open(output_file, 'a') as f:
         params_str = json.dumps(str(params))
-        line = f'{source};{rank};{expected_cost};{cost};{time};{params_str}\n'
+        line = f'{source};{rank};{expected_cost};{cost};{time};{params_str};{distance}\n'
         f.write(line)
 
 
@@ -57,15 +76,15 @@ if __name__ == '__main__':
         help='Specifies the output dir to append results to')
     args = parser.parse_args()
     
-    output_file = os.path.join('eval', os.path.basename(args.instance).split('.')[0] + '.csv')
+    output_file = os.path.join(args.output_dir, os.path.basename(args.instance).split('.')[0] + '.csv')
+    
     # 1. Run default
-    Process(target=run, args=[None, args.instance, output_file, 'default']).start()
+    run(None, args.instance, output_file, 'default')
 
-    # 2. Run incumbent from SMAC
-    config = incumbent()
-    Process(target=run, args=[config, args.instance, output_file, 'smac']).start()
+    # # 2. Run incumbent from SMAC
+    # Process(target=run_smac, args=[args.instance, output_file]).start()
 
-    # 3. Run MILPTune configs
-    configs = get_configuration_parameters(instance_file=args.instance, dataset_name=args.dataset_name, n_configs=5)
-    for rank, config in enumerate(configs):
-        Process(target=run, args=[config['params'], args.instance, output_file, 'milptune', rank, config['cost']]).start()
+    # # 3. Run MILPTune configs
+    # configs, distances = get_configuration_parameters(instance_file=args.instance, dataset_name=args.dataset_name, n_neighbors=5, n_configs=1)
+    # for rank, config in enumerate(configs):
+    #     run(config['params'], args.instance, output_file, 'milptune', rank, config['cost'], distances[rank])

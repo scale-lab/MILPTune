@@ -53,11 +53,19 @@ if __name__ == '__main__':
     parser._optionals.title = 'Optional arguments'
     parser.add_argument('-v', '--version', action='version', \
         version = f'MILPTune v{VERSION}', help='Shows program\'s version number and exit')
-    parser.add_argument('instance', type=str, \
-        help='Path to the problem instance')
     parser.add_argument('dataset_name', type=str, \
         help='Dataset name in the DB to add these runs to')
     args = parser.parse_args()
+
+    # Get instance from the DB
+    uri = "mongodb://%s:%s@%s:%s" % ('milptune', 'MILP*tune2023', '20.25.127.142', 31331)
+    client = MongoClient(uri)
+    db = client.milptunedb
+    dataset = db[args.dataset_name]
+    doc = dataset.find_one_and_update(
+        {'configs': {'$exists': False}, 'solver_lock': {'$exists': False}},
+        {'$set': {'solver_lock': True}})
+    instance_file = doc['path']
 
     # Configuration
     cs = ConfigurationSpace()
@@ -90,10 +98,10 @@ if __name__ == '__main__':
     scenario = Scenario(
         {
             'run_obj': 'quality',       # we optimize quality (alternatively runtime)
-            'runcount-limit': 10,       # max. number of function evaluations
+            'runcount-limit': 8,        # max. number of function evaluations
             'cs': cs,                   # configuration space
             'deterministic': True,
-            'instances': [[args.instance]],
+            'instances': [[instance_file]],
         }
     )
 
@@ -103,20 +111,20 @@ if __name__ == '__main__':
         rng=np.random.RandomState(seed), run_id=seed)
     
     try:
+        print(instance_file)
         incumbent = smac.optimize()
     finally:
         incumbent = smac.solver.incumbent
 
-    client = MongoClient(host='20.232.144.167')
-    db = client.milptunedb
-    dataset = db[args.dataset_name]
     for (config_id, instance_id, seed, budget), (cost, time, status, starttime, endtime, additional_info) in smac.runhistory.data.items():
-        r = dataset.find_one({'path': instance_id})
         config = {
             'seed': seed,
             'cost': cost,
             'time': time,
             'params': smac.runhistory.ids_config[config_id]._values
         }
-        update_result = dataset.update_one(r, {'$push': {'configs': config}})
-        print(update_result)
+        r = dataset.find_one_and_update(
+            {'path': instance_id},
+            {'$push': {'configs': config}})
+        
+        print(r['_id'])

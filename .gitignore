@@ -59,3 +59,4 @@ smac3-output*
 *.joblib
 *.gz
 *.env
+*.pdf

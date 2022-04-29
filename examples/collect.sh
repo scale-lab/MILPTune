@@ -1,9 +1,11 @@
 list()
 {
-    for i in $1*.mps.gz
+    for i in {1..1000000}
     do
         echo $i
     done
 }
-
-list $1 | xargs -i --max-procs=20 python run_smac.py {} $2
+N_CORES=$(nproc --all)
+FREE_CORES=2
+PROCS=$(($N_CORES - $FREE_CORES))
+list | xargs -i --max-procs=$PROCS python run_smac.py $1

@@ -16,7 +16,7 @@ def _solve_(params, instance):
     return cost
 
 
-def optimize(instance_file, runcount_limit=8):
+def optimize(instance_file, runcount_limit=8, restore_incumbent=None, stats=None):
     # Configuration
     cs = ConfigurationSpace()
     params = [
@@ -58,8 +58,9 @@ def optimize(instance_file, runcount_limit=8):
     seed = np.random.randint(1000000, 9999999)
     smac = SMAC4HPO(
         scenario=scenario, tae_runner=_solve_,
-        rng=np.random.RandomState(seed), run_id=seed)
-    
+        rng=np.random.RandomState(seed), run_id=seed,
+        restore_incumbent=restore_incumbent, stats=stats)
+
     try:
         incumbent = smac.optimize()
     finally:

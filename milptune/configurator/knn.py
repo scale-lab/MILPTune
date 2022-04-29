@@ -17,6 +17,7 @@ def _check_(test, array):
 def get_configuration_parameters(
         instance_file: str,
         dataset_name: str,
+        n_neighbors=5,
         n_configs=5
         ):
     # 0. Connect to database
@@ -53,7 +54,7 @@ def get_configuration_parameters(
     X_mlkr_trained = np.vstack(X_mlkr_trained)
 
     # 4. Run knn
-    transformer = KNeighborsTransformer(n_neighbors=n_configs, mode='distance', n_jobs=-1)
+    transformer = KNeighborsTransformer(n_neighbors=n_neighbors, mode='distance', n_jobs=-1)
     transformer.fit(X_mlkr_trained)
     distances, neighbors = transformer.kneighbors(X_mlkr, return_distance=True)
     neighbors = X_mlkr_trained[neighbors[0],:]    
@@ -61,14 +62,18 @@ def get_configuration_parameters(
 
     # 5. Get all configs of the k nearest neighbors
     dataset = db[dataset_name]
-    r = dataset.find({'A_mlkr': {'$in': neighbors}}, projection=['configs'])
-    
-    configs = list(map(lambda doc: doc['configs'], r))
-    configs = [item for sublist in configs for item in sublist]
+    distances = distances.flatten()
+    configs, config_distances = [], []
+    for index, neighbor in enumerate(neighbors):
+        # We do this query one at a time (and not using Mongo $in operator to preserve order)
+        r = dataset.find_one({'A_mlkr': neighbor}, projection=['configs'])
+        instance_configs = sorted(r['configs'], key=lambda c: c['cost'])
+        configs.extend(instance_configs[:n_configs])
+        config_distances.extend([distances[index]] * len(instance_configs[:n_configs]))
 
     # 6. Suggest `n_configs` configurations with lowest cost from all neighbors
-    suggested = zip(configs, distances.flatten())
+    suggested = list(zip(configs, config_distances))
     suggested = sorted(suggested, key=lambda c: c[0]['cost'])
     suggested_configs, distances = zip(*suggested)
-
-    return suggested_configs[:n_configs], distances
+    
+    return suggested_configs, distances

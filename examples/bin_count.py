@@ -1,8 +1,5 @@
 import argparse
 import pathlib
-import re
-from email.policy import default
-from pprint import pprint
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -27,7 +24,7 @@ def bin_count(default, smac, milptune, output_file):
     for i in range(len(bins) - 1):
         labels.append(f'{bins[i]}-{bins[i+1]}')
     labels.append('No Sol.')
-    
+
     y3 = np.bincount(np.digitize(milptune, bins), minlength=10)
     sns.barplot(x=labels, y=y3[1:], palette="rocket", ax=ax1)
     ax1.bar_label(ax1.containers[0], fontsize=10)
@@ -52,8 +49,8 @@ def bin_count(default, smac, milptune, output_file):
     plt.setp(f.axes, yticks=[])
     plt.tight_layout(h_pad=2)
     plt.setp(ax3.get_xticklabels(), fontsize=10)
-    plt.xticks(rotation = 85)
-    
+    plt.xticks(rotation=85)
+
     plt.savefig(output_file)
 
 
@@ -65,18 +62,18 @@ class CapitalisedHelpFormatter(argparse.ArgumentDefaultsHelpFormatter):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(add_help=True, formatter_class=CapitalisedHelpFormatter, \
-        description='Suggests configuration parameters for SCIP')
+    parser = argparse.ArgumentParser(add_help=True, formatter_class=CapitalisedHelpFormatter,
+                                     description='Suggests configuration parameters for SCIP')
     parser._positionals.title = 'Positional arguments'
     parser._optionals.title = 'Optional arguments'
-    parser.add_argument('-v', '--version', action='version', \
-        version = f'MILPTune v{VERSION}', help='Shows program\'s version number and exit')
-    parser.add_argument('validation_dir', type=str, \
-        help='Specifies the validation dir that has .csv files')
-    parser.add_argument('k', type=int, default=1, \
-        help='Specifies how many configs to look at (1-5)')
+    parser.add_argument('-v', '--version', action='version',
+                        version=f'MILPTune v{VERSION}', help='Shows program\'s version number and exit')
+    parser.add_argument('validation_dir', type=str,
+                        help='Specifies the validation dir that has .csv files')
+    parser.add_argument('k', type=int, default=1,
+                        help='Specifies how many configs to look at (1-5)')
     args = parser.parse_args()
-    
+
     validation_path = pathlib.Path(args.validation_dir)
     instances = list(validation_path.glob('*.csv'))
 
@@ -100,8 +97,8 @@ if __name__ == '__main__':
                             cost[source] = float(actual_cost)
                     else:
                         cost[source] = float(actual_cost)
-            
+
             for k, v in cost.items():
                 results[k].append(v)
-    
+
     bin_count(results['default'], results['smac'], results['milptune'], f'top-{args.k}.pdf')

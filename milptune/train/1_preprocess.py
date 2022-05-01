@@ -12,7 +12,7 @@ def index_vars_conss(instance, dataset_name):
     r = dataset.find_one_and_update(
         {
             f'{dataset_name}': {'$exists': True}
-        }, 
+        },
         {
             '$set': {
                 f'{dataset_name}.vars_index': vars_index,

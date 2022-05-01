@@ -13,7 +13,7 @@ from milptune.db.connections import get_client
 if __name__ == '__main__':
     data_path = pathlib.Path('.')
     workers_paths = list(data_path.glob('smac3*/run_*'))
-    
+
     params = [
         # Branching
         CategoricalHyperparameter('branching/scorefunc', choices=['s', 'p', 'q'], default_value='p'),
@@ -24,11 +24,11 @@ if __name__ == '__main__':
         UniformFloatHyperparameter('branching/midpullreldomtrig', 0.0, 1.0, default_value=0.5),
         CategoricalHyperparameter('branching/lpgainnormalize', choices=['d', 'l', 's'], default_value='s'),
         # LP
-        CategoricalHyperparameter('lp/pricing', choices=['l','a','f','p','s','q','d'], default_value='l'),
+        CategoricalHyperparameter('lp/pricing', choices=['l', 'a', 'f', 'p', 's', 'q', 'd'], default_value='l'),
         UniformIntegerHyperparameter('lp/colagelimit', -1, 2147483647, default_value=10),
         UniformIntegerHyperparameter('lp/rowagelimit', -1, 2147483647, default_value=10),
         # Node Selection
-        CategoricalHyperparameter('nodeselection/childsel', choices=["d",'u','p','i','l','r','h'], default_value='h'),
+        CategoricalHyperparameter('nodeselection/childsel', choices=['d', 'u', 'p', 'i', 'l', 'r', 'h'], default_value='h'),  # noqa
         # Separating
         UniformFloatHyperparameter('separating/minortho', 0.0, 1.0, default_value=0.9),
         UniformFloatHyperparameter('separating/minorthoroot', 0.0, 1.0, default_value=0.9),
@@ -37,7 +37,6 @@ if __name__ == '__main__':
         UniformIntegerHyperparameter('separating/cutagelimit', -1, 2147483647, default_value=80),
         UniformIntegerHyperparameter('separating/poolfreq', -1, 65534, default_value=10)
     ]
-    
 
     for worker_path in workers_paths:
         rh_path = worker_path.joinpath('runhistory.json')
@@ -48,9 +47,9 @@ if __name__ == '__main__':
 
         client = get_client()
         db = client.milptunedb
-        
+
         print(worker_path)
-        for (config_id, instance_id, seed, budget), (cost, time, status, starttime, endtime, additional_info) in runhistory.data.items():
+        for (config_id, instance_id, seed, budget), (cost, time, status, starttime, endtime, additional_info) in runhistory.data.items():  # noqa
             instance_id = instance_id.replace('//', '/')
             dataset = db[instance_id.split('/')[-3]]
             r = dataset.find_one({'path': instance_id})

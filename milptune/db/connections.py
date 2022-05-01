@@ -4,7 +4,6 @@ from pymongo import MongoClient
 
 
 def get_client():
-    
     CONNECTION_STRING = 'mongodb://{}:{}@{}:{}'.format(
         environ.get('MONGO_USERNAME'),
         environ.get('MONGO_PASSWORD'),

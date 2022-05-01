@@ -1,7 +1,6 @@
 import metric_learn
 import numpy as np
 from joblib import load
-from pymongo import MongoClient
 from sklearn.neighbors import KNeighborsTransformer
 
 from milptune.db.connections import get_client
@@ -10,16 +9,14 @@ from milptune.features.A import get_A
 
 
 def _check_(test, array):
-    print(test.shape, array.shape)
-    return list(map(lambda i: i[0], filter(lambda i: i[1], [(i, np.allclose(x, test)) for i, x in enumerate(array)])))
+    return list(map(lambda i: i[0], filter(lambda i: i[1], [(i, np.allclose(x, test)) for i, x in enumerate(array)])))  # noqa
 
 
 def get_configuration_parameters(
         instance_file: str,
         dataset_name: str,
         n_neighbors=5,
-        n_configs=5
-        ):
+        n_configs=5):
     # 0. Connect to database
     client = get_client()
     db = client.milptunedb
@@ -32,10 +29,12 @@ def get_configuration_parameters(
     mlkr: metric_learn.MLKR = load(r[dataset_name]['mlkr']['model'])
 
     # 2. Transform instance to new metric space
-    r = dataset.find_one({f'{dataset_name}.vars_index': {'$exists': True}, f'{dataset_name}.conss_index': {'$exists': True}})
+    r = dataset.find_one(
+        {f'{dataset_name}.vars_index': {'$exists': True},
+         f'{dataset_name}.conss_index': {'$exists': True}})
     if not r:
         raise Exception(f'Cannot load metadata for {dataset_name}')
-    
+
     mask = from_mongo_binary(r[dataset_name]['mask'])
     A = get_A(instance_file, r[dataset_name]['vars_index'], r[dataset_name]['conss_index'])
     X = np.asarray(A.todense().flatten())
@@ -44,7 +43,6 @@ def get_configuration_parameters(
     X_mlkr = mlkr.transform(X)
 
     # 3. Load full data to get knn
-    # X_mlkr_trained = np.load(r[dataset_name]['mlkr']['transformed_data']) -- load from database for accuracy
     dataset = db[dataset_name]
     r = dataset.find({'A_mlkr': {'$exists': True}, 'configs': {'$exists': True}}, sort=[('path', 1)])
     X_mlkr_trained = []
@@ -57,7 +55,7 @@ def get_configuration_parameters(
     transformer = KNeighborsTransformer(n_neighbors=n_neighbors, mode='distance', n_jobs=-1)
     transformer.fit(X_mlkr_trained)
     distances, neighbors = transformer.kneighbors(X_mlkr, return_distance=True)
-    neighbors = X_mlkr_trained[neighbors[0],:]    
+    neighbors = X_mlkr_trained[neighbors[0], :]
     neighbors = list(map(lambda n: to_mongo_binary(n.flatten()), neighbors))
 
     # 5. Get all configs of the k nearest neighbors
@@ -75,5 +73,5 @@ def get_configuration_parameters(
     suggested = list(zip(configs, config_distances))
     suggested = sorted(suggested, key=lambda c: c[0]['cost'])
     suggested_configs, distances = zip(*suggested)
-    
+
     return suggested_configs, distances

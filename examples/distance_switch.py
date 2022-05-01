@@ -1,10 +1,11 @@
-import seaborn as sns
-import matplotlib.pyplot as plt
 import argparse
 import pathlib
 
-from milptune.version import VERSION
+import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
+
+from milptune.version import VERSION
 
 
 def distances(similarity_distances, method, output_file):
@@ -25,7 +26,7 @@ def distances(similarity_distances, method, output_file):
 
     # Add in points to show each observation
     sns.stripplot(x="distance", y="method", data=df,
-                size=4, color=".3", linewidth=0)
+                  size=4, color=".3", linewidth=0)
 
     # Tweak the visual presentation
     ax.xaxis.grid(True)
@@ -43,16 +44,16 @@ class CapitalisedHelpFormatter(argparse.ArgumentDefaultsHelpFormatter):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(add_help=True, formatter_class=CapitalisedHelpFormatter, \
-        description='Suggests configuration parameters for SCIP')
+    parser = argparse.ArgumentParser(add_help=True, formatter_class=CapitalisedHelpFormatter,
+                                     description='Suggests configuration parameters for SCIP')
     parser._positionals.title = 'Positional arguments'
     parser._optionals.title = 'Optional arguments'
-    parser.add_argument('-v', '--version', action='version', \
-        version = f'MILPTune v{VERSION}', help='Shows program\'s version number and exit')
-    parser.add_argument('validation_dir', type=str, \
-        help='Specifies the validation dir that has .csv files')
+    parser.add_argument('-v', '--version', action='version',
+                        version=f'MILPTune v{VERSION}', help='Shows program\'s version number and exit')
+    parser.add_argument('validation_dir', type=str,
+                        help='Specifies the validation dir that has .csv files')
     args = parser.parse_args()
-    
+
     validation_path = pathlib.Path(args.validation_dir)
     instances = list(validation_path.glob('*.csv'))
 
@@ -80,5 +81,5 @@ if __name__ == '__main__':
             elif method == 'smac':
                 similarity_distances.append(max(d))
                 methods.append('SMAC')
-    
-    distances(similarity_distances, methods, f'distance_switch.pdf')
+
+    distances(similarity_distances, methods, 'distance_switch.pdf')

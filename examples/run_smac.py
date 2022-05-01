@@ -38,23 +38,23 @@ def solve_milp(params, instance):
     model.optimize()
 
     # solution
-    sol = model.getBestSol()
+    _ = model.getBestSol()
     primal = model.getPrimalbound()
     dual = model.getDualbound()
-    time = model.getSolvingTime()
+    _ = model.getSolvingTime()
 
     return primal - dual
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(add_help=True, formatter_class=CapitalisedHelpFormatter, \
-        description='Runs SMAC on the given instance')
+    parser = argparse.ArgumentParser(add_help=True, formatter_class=CapitalisedHelpFormatter,
+                                     description='Runs SMAC on the given instance')
     parser._positionals.title = 'Positional arguments'
     parser._optionals.title = 'Optional arguments'
-    parser.add_argument('-v', '--version', action='version', \
-        version = f'MILPTune v{VERSION}', help='Shows program\'s version number and exit')
-    parser.add_argument('dataset_name', type=str, \
-        help='Dataset name in the DB to add these runs to')
+    parser.add_argument('-v', '--version', action='version',
+                        version=f'MILPTune v{VERSION}', help='Shows program\'s version number and exit')
+    parser.add_argument('dataset_name', type=str,
+                        help='Dataset name in the DB to add these runs to')
     args = parser.parse_args()
 
     # Get instance from the DB
@@ -79,11 +79,11 @@ if __name__ == '__main__':
         UniformFloatHyperparameter('branching/midpullreldomtrig', 0.0, 1.0, default_value=0.5),
         CategoricalHyperparameter('branching/lpgainnormalize', choices=['d', 'l', 's'], default_value='s'),
         # LP
-        CategoricalHyperparameter('lp/pricing', choices=['l','a','f','p','s','q','d'], default_value='l'),
+        CategoricalHyperparameter('lp/pricing', choices=['l', 'a', 'f', 'p', 's', 'q', 'd'], default_value='l'),
         UniformIntegerHyperparameter('lp/colagelimit', -1, 2147483647, default_value=10),
         UniformIntegerHyperparameter('lp/rowagelimit', -1, 2147483647, default_value=10),
         # Node Selection
-        CategoricalHyperparameter('nodeselection/childsel', choices=["d",'u','p','i','l','r','h'], default_value='h'),
+        CategoricalHyperparameter('nodeselection/childsel', choices=['d', 'u', 'p', 'i', 'l', 'r', 'h'], default_value='h'),  # noqa
         # Separating
         UniformFloatHyperparameter('separating/minortho', 0.0, 1.0, default_value=0.9),
         UniformFloatHyperparameter('separating/minorthoroot', 0.0, 1.0, default_value=0.9),
@@ -109,14 +109,14 @@ if __name__ == '__main__':
     smac = SMAC4HPO(
         scenario=scenario, tae_runner=solve_milp,
         rng=np.random.RandomState(seed), run_id=seed)
-    
+
     try:
         print(instance_file)
         incumbent = smac.optimize()
     finally:
         incumbent = smac.solver.incumbent
 
-    for (config_id, instance_id, seed, budget), (cost, time, status, starttime, endtime, additional_info) in smac.runhistory.data.items():
+    for (config_id, instance_id, seed, budget), (cost, time, status, starttime, endtime, additional_info) in smac.runhistory.data.items():  # noqa
         config = {
             'seed': seed,
             'cost': cost,
@@ -126,5 +126,5 @@ if __name__ == '__main__':
         r = dataset.find_one_and_update(
             {'path': instance_id},
             {'$push': {'configs': config}})
-        
+
         print(r['_id'])

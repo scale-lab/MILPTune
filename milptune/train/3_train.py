@@ -33,7 +33,7 @@ def load_from_database(dataset_name):
     np.save(f'X.{dataset_name}.npy', X)
     np.save(f'y.{dataset_name}.npy', y)
     np.save(f'mask.{dataset_name}.npy', mask)
-    
+
     # Save mask to database metadata
     dataset = db['milptune_metadata']
     dataset.find_one_and_update(

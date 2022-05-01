@@ -15,10 +15,12 @@ def index_A(instances_dir, dataset_name):
     dataset = db['milptune_metadata']
 
     # primer to just focus on common matrix coeficients
-    r = dataset.find_one({f'{dataset_name}.vars_index': {'$exists': True}, f'{dataset_name}.conss_index': {'$exists': True}})
+    r = dataset.find_one(
+        {f'{dataset_name}.vars_index': {'$exists': True},
+         f'{dataset_name}.conss_index': {'$exists': True}})
     if not r:
         raise Exception('Please, run `preprocess_1.py first to index the variable/constraint names')
-    
+
     vars_index, conss_index = r[f'{dataset_name}']['vars_index'], r[f'{dataset_name}']['conss_index']
     print('Retrieved vars_index and conss_index')
 

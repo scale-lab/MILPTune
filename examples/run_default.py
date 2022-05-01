@@ -13,16 +13,16 @@ class CapitalisedHelpFormatter(argparse.ArgumentDefaultsHelpFormatter):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(add_help=True, formatter_class=CapitalisedHelpFormatter, \
-        description='Solves the given instance using default SCIP parameters')
+    parser = argparse.ArgumentParser(add_help=True, formatter_class=CapitalisedHelpFormatter,
+                                     description='Solves the given instance using default SCIP parameters')
     parser._positionals.title = 'Positional arguments'
     parser._optionals.title = 'Optional arguments'
-    parser.add_argument('-v', '--version', action='version', \
-        version = f'MILPTune v{VERSION}', help='Shows program\'s version number and exit')
-    parser.add_argument('instance', type=str, \
-        help='Path to the problem instance')
-    parser.add_argument('dataset_name', type=str, \
-        help='Dataset name in the DB to add these runs to')
+    parser.add_argument('-v', '--version', action='version',
+                        version=f'MILPTune v{VERSION}', help='Shows program\'s version number and exit')
+    parser.add_argument('instance', type=str,
+                        help='Path to the problem instance')
+    parser.add_argument('dataset_name', type=str,
+                        help='Dataset name in the DB to add these runs to')
     args = parser.parse_args()
 
     print('connecing to db ..')

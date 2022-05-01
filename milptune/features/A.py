@@ -1,7 +1,6 @@
 from collections import deque
 
 import numpy as np
-import pandas as pd
 from pyscipopt import Model
 from scipy.sparse import coo_matrix
 
@@ -9,7 +8,7 @@ from scipy.sparse import coo_matrix
 def get_mapping(instance_path: str):
     model = Model()
     model.readProblem(instance_path)
-    vars = model.getVars()    
+    vars = model.getVars()
     conss = model.getConss()
 
     vars_indices = {str(vars[i]): i for i in range(len(vars))}
@@ -26,6 +25,7 @@ def get_A(instance_path: str, vars_index, conss_index) -> np.array:
     conss = filter(lambda c: str(c) in conss_index, conss)
 
     row, col, data = [], [], []
+
     def breakdown(cons):
         coeffs = model.getValsLinear(cons)
         coeffs = dict(filter(lambda v: str(v[0]) in vars_index, coeffs.items()))

@@ -22,7 +22,7 @@ def smac_vs_milptune(smac, milptune, output_file):
 
     hue = []
     label = []
-    for i in range(len(smac)):        
+    for i in range(len(smac)):
         if milptune[i] > 100 and smac[i] > 100:
             hue.append('red')
             label.append('No Sol. Both Configs')
@@ -33,9 +33,7 @@ def smac_vs_milptune(smac, milptune, output_file):
             hue.append('blue')
             label.append('SMAC Config Better')
 
-    g = sns.scatterplot(x=smac, y=milptune, hue=label, palette=['green', 'cornflowerblue'], legend="full")
-    # scatter = plt.scatter(smac, milptune, c=hue)
-
+    sns.scatterplot(x=smac, y=milptune, hue=label, palette=['green', 'cornflowerblue'], legend="full")
 
     plt.plot(range(0, 100), range(0, 100), color='silver', linestyle='dashed')
     plt.plot([100] * 120, range(0, 120), color='silver', linestyle='dashed')
@@ -59,18 +57,18 @@ class CapitalisedHelpFormatter(argparse.ArgumentDefaultsHelpFormatter):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(add_help=True, formatter_class=CapitalisedHelpFormatter, \
-        description='Suggests configuration parameters for SCIP')
+    parser = argparse.ArgumentParser(add_help=True, formatter_class=CapitalisedHelpFormatter,
+                                     description='Suggests configuration parameters for SCIP')
     parser._positionals.title = 'Positional arguments'
     parser._optionals.title = 'Optional arguments'
-    parser.add_argument('-v', '--version', action='version', \
-        version = f'MILPTune v{VERSION}', help='Shows program\'s version number and exit')
-    parser.add_argument('validation_dir', type=str, \
-        help='Specifies the validation dir that has .csv files')
-    parser.add_argument('k', type=int, default=1, \
-        help='Specifies how many configs to look at (1-5)')
+    parser.add_argument('-v', '--version', action='version',
+                        version=f'MILPTune v{VERSION}', help='Shows program\'s version number and exit')
+    parser.add_argument('validation_dir', type=str,
+                        help='Specifies the validation dir that has .csv files')
+    parser.add_argument('k', type=int, default=1,
+                        help='Specifies how many configs to look at (1-5)')
     args = parser.parse_args()
-    
+
     validation_path = pathlib.Path(args.validation_dir)
     instances = list(validation_path.glob('*.csv'))
 
@@ -94,8 +92,8 @@ if __name__ == '__main__':
                             cost[source] = float(actual_cost)
                     else:
                         cost[source] = float(actual_cost)
-            
+
             for k, v in cost.items():
                 results[k].append(v)
-    
+
     smac_vs_milptune(results['smac'], results['milptune'], f'smac_vs_milptune-{args.k}.pdf')

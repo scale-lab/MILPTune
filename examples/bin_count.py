@@ -11,7 +11,7 @@ from milptune.version import VERSION
 
 def bin_count(default, smac, milptune, output_file):
     plt.clf()
-    mpl.rcParams['xtick.major.pad'] = 0
+    mpl.rcParams["xtick.major.pad"] = 0
 
     sns.set_theme(style="white", context="talk")
 
@@ -22,8 +22,8 @@ def bin_count(default, smac, milptune, output_file):
     bins = np.arange(0, 100, 10)
     labels = []
     for i in range(len(bins) - 1):
-        labels.append(f'{bins[i]}-{bins[i+1]}')
-    labels.append('No Sol.')
+        labels.append(f"{bins[i]}-{bins[i+1]}")
+    labels.append("No Sol.")
 
     y3 = np.bincount(np.digitize(milptune, bins), minlength=10)
     sns.barplot(x=labels, y=y3[1:], palette="rocket", ax=ax1)
@@ -57,42 +57,44 @@ def bin_count(default, smac, milptune, output_file):
 class CapitalisedHelpFormatter(argparse.ArgumentDefaultsHelpFormatter):
     def add_usage(self, usage, actions, groups, prefix=None):
         if not prefix:
-            prefix = 'Usage: '
+            prefix = "Usage: "
             return super(CapitalisedHelpFormatter, self).add_usage(usage, actions, groups, prefix)
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(add_help=True, formatter_class=CapitalisedHelpFormatter,
-                                     description='Suggests configuration parameters for SCIP')
-    parser._positionals.title = 'Positional arguments'
-    parser._optionals.title = 'Optional arguments'
-    parser.add_argument('-v', '--version', action='version',
-                        version=f'MILPTune v{VERSION}', help='Shows program\'s version number and exit')
-    parser.add_argument('validation_dir', type=str,
-                        help='Specifies the validation dir that has .csv files')
-    parser.add_argument('k', type=int, default=1,
-                        help='Specifies how many configs to look at (1-5)')
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        add_help=True,
+        formatter_class=CapitalisedHelpFormatter,
+        description="Suggests configuration parameters for SCIP",
+    )
+    parser._positionals.title = "Positional arguments"
+    parser._optionals.title = "Optional arguments"
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="version",
+        version=f"MILPTune v{VERSION}",
+        help="Shows program's version number and exit",
+    )
+    parser.add_argument(
+        "validation_dir", type=str, help="Specifies the validation dir that has .csv files"
+    )
+    parser.add_argument(
+        "k", type=int, default=1, help="Specifies how many configs to look at (1-5)"
+    )
     args = parser.parse_args()
 
     validation_path = pathlib.Path(args.validation_dir)
-    instances = list(validation_path.glob('*.csv'))
+    instances = list(validation_path.glob("*.csv"))
 
-    results: dict = {
-        'default': [],
-        'smac': [],
-        'milptune': []
-    }
+    results: dict = {"default": [], "smac": [], "milptune": []}
     for instance in instances:
-        with open(instance, 'r') as f:
-            cost = {
-                'default': 1_000_000.0,
-                'smac': 1_000_000.0,
-                'milptune': 1_000_000.0
-            }
+        with open(instance, "r") as f:
+            cost = {"default": 1_000_000.0, "smac": 1_000_000.0, "milptune": 1_000_000.0}
             for line in f:
-                source, rank, estimated_cost, actual_cost, time, _, _ = line.strip().split(';')
+                source, rank, estimated_cost, actual_cost, time, _, _ = line.strip().split(";")
                 if float(actual_cost) < cost[source]:
-                    if source in ['milptune', 'smac']:
+                    if source in ["milptune", "smac"]:
                         if int(rank) in list(range(args.k)):
                             cost[source] = float(actual_cost)
                     else:
@@ -101,4 +103,4 @@ if __name__ == '__main__':
             for k, v in cost.items():
                 results[k].append(v)
 
-    bin_count(results['default'], results['smac'], results['milptune'], f'top-{args.k}.pdf')
+    bin_count(results["default"], results["smac"], results["milptune"], f"top-{args.k}.pdf")

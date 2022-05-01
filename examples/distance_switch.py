@@ -17,6 +17,7 @@ def distances(similarity_distances, method, output_file):
         'distance': similarity_distances,
         'method': method
     })
+    df.sort_values(by='method', inplace=True, ascending=False)
 
     # Plot the orbital period with horizontal boxes
     sns.boxplot(x='distance', y='method', data=df,

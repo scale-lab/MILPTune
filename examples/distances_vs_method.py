@@ -22,8 +22,8 @@ def distances(actual, estimated, output_file):
     # plt.plot([100] * 120, range(0, 120), color='silver', linestyle='dashed')
     # plt.plot(range(0, 120), [100] * 120, color='silver', linestyle='dashed')
 
-    plt.xlabel("Estimated Cost", fontsize=15)
-    plt.ylabel("Actual Cost", fontsize=15)
+    plt.xlabel("Nearest Neighbor Cost", fontsize=15)
+    plt.ylabel("Validation Instance Cost", fontsize=15)
     plt.xlim([0, 100])
     plt.ylim([0, 100])
     plt.grid()

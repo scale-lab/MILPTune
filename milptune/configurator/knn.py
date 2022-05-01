@@ -49,7 +49,7 @@ def get_configuration_parameters(
     for instance in r:
         A = from_mongo_binary(instance['A_mlkr'])
         X_mlkr_trained.append(A)
-    X_mlkr_trained = np.vstack(X_mlkr_trained)
+    X_mlkr_trained: np.ndarray = np.vstack(X_mlkr_trained)
 
     # 4. Run knn
     transformer = KNeighborsTransformer(n_neighbors=n_neighbors, mode='distance', n_jobs=-1)

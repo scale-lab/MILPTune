@@ -77,7 +77,7 @@ if __name__ == '__main__':
     validation_path = pathlib.Path(args.validation_dir)
     instances = list(validation_path.glob('*.csv'))
 
-    results = {
+    results: dict = {
         'default': [],
         'smac': [],
         'milptune': []

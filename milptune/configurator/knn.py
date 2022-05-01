@@ -45,11 +45,11 @@ def get_configuration_parameters(
     # 3. Load full data to get knn
     dataset = db[dataset_name]
     r = dataset.find({'A_mlkr': {'$exists': True}, 'configs': {'$exists': True}}, sort=[('path', 1)])
-    X_mlkr_trained = []
+    X_mlkr_trained_list = []
     for instance in r:
         A = from_mongo_binary(instance['A_mlkr'])
-        X_mlkr_trained.append(A)
-    X_mlkr_trained: np.ndarray = np.vstack(X_mlkr_trained)
+        X_mlkr_trained_list.append(A)
+    X_mlkr_trained = np.vstack(X_mlkr_trained_list)
 
     # 4. Run knn
     transformer = KNeighborsTransformer(n_neighbors=n_neighbors, mode='distance', n_jobs=-1)

@@ -62,7 +62,7 @@ if __name__ == '__main__':
     for instance in instances:
         with open(instance, 'r') as f:
             d = []
-            min_cost = 1_000_000
+            min_cost = 1_000_000.0
             method = None
             for line in f:
                 source, rank, estimated_cost, actual_cost, time, _, distance = line.strip().split(';')

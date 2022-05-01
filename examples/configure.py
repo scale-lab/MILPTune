@@ -23,9 +23,11 @@ if __name__ == '__main__':
                         help='Specifies the output file to write configuration parameters to')
     parser.add_argument('instance', type=open,
                         help='Path to the instance.mps.gz file')
+    parser.add_argument('dataset_name', type=open,
+                        help='Name of the dataset the instance belongs to')
     args = parser.parse_args()
 
-    config = get_configuration_parameters(args.instance)
+    config = get_configuration_parameters(args.instance, args.dataset_name)
 
     with open(args.output_file, 'w') as f:
         json.dump(config, f)

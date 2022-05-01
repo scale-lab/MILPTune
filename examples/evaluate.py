@@ -82,7 +82,7 @@ if __name__ == '__main__':
     run(None, args.instance, output_file, 'default')
 
     # 2. Run incumbent from SMAC
-    Process(target=run_smac, args=[args.instance, output_file]).start()
+    Process(target=run_smac, args=(args.instance, output_file)).start()
 
     # 3. Run MILPTune configs
     configs, distances = get_configuration_parameters(

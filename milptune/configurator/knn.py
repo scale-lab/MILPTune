@@ -3,7 +3,7 @@ import os
 import metric_learn
 import numpy as np
 from joblib import load
-from sklearn.manifold import TSNE
+from sklearn.decomposition import TruncatedSVD
 from sklearn.neighbors import KNeighborsTransformer
 
 from milptune.db.connections import get_client
@@ -33,9 +33,9 @@ def get_configuration_parameters(instance_file: str, dataset_name: str, n_neighb
         raise Exception("Cannot find trained model")
     mlkr: metric_learn.MLKR = load(os.path.expanduser(r[dataset_name]["model"]["mlkr"]))
     mask = np.load(os.path.expanduser(r[dataset_name]["model"]["mask"]))
-    tsne = None
-    if r[dataset_name]["model"].get("tsne", None):
-        tsne: TSNE = load(os.path.expanduser(r[dataset_name]["model"]["tsne"]))
+    svd = None
+    if r[dataset_name]["model"].get("svd", None):
+        svd: TruncatedSVD = load(os.path.expanduser(r[dataset_name]["model"]["svd"]))
 
     # 2. Transform instance to new metric space
     r = dataset.find_one(
@@ -52,8 +52,8 @@ def get_configuration_parameters(instance_file: str, dataset_name: str, n_neighb
     X = X.reshape(1, -1)
     X = np.delete(X, mask, axis=1)
 
-    if tsne:
-        X = tsne.fit_transform(X)
+    if svd:
+        X = svd.transform(X)
 
     X_mlkr = mlkr.transform(X)
 

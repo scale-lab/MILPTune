@@ -4,7 +4,7 @@ import metric_learn
 import numpy as np
 from joblib import dump
 from pymongo import ReturnDocument
-from sklearn.manifold import TSNE
+from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import MinMaxScaler
 
 from milptune.db.connections import get_client
@@ -69,20 +69,14 @@ def train_mlkr(dataset_name, cost_threshold=10000, load_local=False, reduce_dim=
         X, y = load_from_database(dataset_name, cost_threshold, model_dir)
         print("Loaded data from database ..")
 
-    np.random.seed(10)
     if reduce_dim:
-        tsne = TSNE(
-            n_components=reduce_dim,
-            method="exact",
-            init="random",
-            learning_rate="auto",
-            perplexity=5,
-        )
-        X = tsne.fit_transform(X)
+        svd = TruncatedSVD(n_components=reduce_dim, algorithm='arpack')
+        X = svd.fit_transform(X)
+        
         output_dir = os.path.expanduser(model_dir)
-        plot_tsne(X, y, os.path.join(output_dir, f"{dataset_name}.png"))
-        dump(tsne, os.path.join(output_dir, f"model.tsne.{dataset_name}.gz"))
+        dump(svd, os.path.join(output_dir, f"model.svd.{dataset_name}.gz"))
 
+    plot_tsne(X, y, os.path.join(output_dir, f"{dataset_name}.png"))
     mlkr = metric_learn.MLKR()
     print("Starting fitting ..")
     X_mlkr = mlkr.fit_transform(X, y.flatten())
@@ -99,9 +93,12 @@ def train_mlkr(dataset_name, cost_threshold=10000, load_local=False, reduce_dim=
 
     saved_model = {f"{dataset_name}.model.mlkr": f"{model_dir}/model.mlkr.{dataset_name}.gz"}
     if reduce_dim:
-        saved_model[f"{dataset_name}.model.tsne"] = f"{model_dir}/model.tsne.{dataset_name}.gz"
+        saved_model[f"{dataset_name}.model.svd"] = f"{model_dir}/model.svd.{dataset_name}.gz"
 
     _ = dataset.find_one_and_update(
         {f"{dataset_name}": {"$exists": True}},
         {"$set": saved_model},
     )
+
+if __name__ == '__main__':
+    train_mlkr("3_anonymous", cost_threshold=10000, load_local=False, reduce_dim=90, model_dir='~/MILPTune/models/3_anonymous')

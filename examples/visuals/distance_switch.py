@@ -18,7 +18,7 @@ def distances(similarity_distances, method, output_file):
     df.sort_values(by="method", inplace=True, ascending=False)
 
     # Plot the orbital period with horizontal boxes
-    sns.boxplot(x="distance", y="method", data=df, whis=[0, 98], width=0.6, palette="vlag")
+    sns.boxplot(x="distance", y="method", data=df, whis=[0, 99.5], width=0.6, palette="vlag")
 
     # Add in points to show each observation
     sns.stripplot(x="distance", y="method", data=df, size=4, color=".3", linewidth=0)

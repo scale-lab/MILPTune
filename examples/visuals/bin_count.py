@@ -19,10 +19,15 @@ def bin_count(default, smac, milptune, output_file):
     f, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(7, 5), sharex=True)
 
     # Generate some sequential data
-    bins = np.arange(0, 100, 10)
+    bins = np.arange(0, 10000, 1000)
     labels = []
     for i in range(len(bins) - 1):
-        labels.append(f"{bins[i]}-{bins[i+1]}")
+        i_from = bins[i]
+        i_to = bins[i+1]
+        if i_from != 0:
+            i_from = f"{int(i_from / 1000)}k"
+        i_to = f"{int(i_to / 1000)}k"
+        labels.append(f"{i_from}-{i_to}")
     labels.append("No Sol.")
 
     y3 = np.bincount(np.digitize(milptune, bins), minlength=10)

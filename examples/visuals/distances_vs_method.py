@@ -9,12 +9,12 @@ from milptune.version import VERSION
 def distances(actual, estimated, output_file):
     plt.clf()
     plt.scatter(estimated, actual)
-    plt.plot(range(0, 100), range(0, 100), color="silver", linestyle="dashed")
+    plt.plot(range(0, 6000), range(0, 6000), color="silver", linestyle="dashed")
 
     plt.xlabel("Nearest Neighbor Cost", fontsize=15)
     plt.ylabel("Validation Instance Cost", fontsize=15)
-    plt.xlim([0, 100])
-    plt.ylim([0, 100])
+    plt.xlim([0, 6000])
+    plt.ylim([0, 6000])
     plt.grid()
     plt.savefig(output_file, bbox_inches="tight")
 
@@ -59,9 +59,13 @@ if __name__ == "__main__":
                     ";"
                 )
                 if source == "milptune":
-                    a.append(float(actual_cost))
-                    e.append(float(estimated_cost))
-            actual.append(min(a))
-            estimated.append(min(e))
+                    if float(actual_cost) < 1_000_000 and float(estimated_cost) < 1_000_000:
+                        actual.append(float(actual_cost))
+                        estimated.append(float(estimated_cost))
+            # actual.append(min(a))
+            # estimated.append(min(e))
+            
 
+    print(len(actual))
+    print(len(estimated))
     distances(actual, estimated, "distance.pdf")

@@ -1,6 +1,6 @@
 list()
 {
-    for i in {1..1000000}
+    for i in {1..10000000}
     do
         echo $i
     done

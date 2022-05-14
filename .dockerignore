@@ -1,3 +1,4 @@
+
 # build artifacts
 
 .eggs/
@@ -53,7 +54,6 @@ site/
 smac3-output*
 *.csv
 *.json
-*.txt
 *.npy
 *.png
 *.joblib
@@ -62,3 +62,7 @@ smac3-output*
 *.pdf
 run_*
 *.pt
+examples
+models
+scrtips
+tests

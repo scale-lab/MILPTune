@@ -8,22 +8,23 @@ import seaborn as sns
 from milptune.version import VERSION
 
 
-def smac_vs_milptune(smac, milptune, output_file):
+def smac_vs_milptune(smac, milptune, output_file, cost_threshold=100):
     plt.clf()
     sns.set_theme()
-    smac = list(map(lambda p: min(p, 100), smac))
-    milptune = list(map(lambda p: min(p, 100), milptune))
+    smac = list(map(lambda p: min(p, cost_threshold), smac))
+    milptune = list(map(lambda p: min(p, cost_threshold), milptune))
 
     for i in range(len(smac)):
-        if milptune[i] >= 100:
-            milptune[i] = milptune[i] + np.random.uniform(1, 10)
-        if smac[i] >= 100:
-            smac[i] = smac[i] + np.random.uniform(1, 10)
+        if milptune[i] >= cost_threshold:
+            milptune[i] = milptune[i] + np.random.uniform(1, 1000)
+        if smac[i] >= cost_threshold:
+            smac[i] = smac[i] + np.random.uniform(1, 1000)
 
     hue = []
     label = []
+
     for i in range(len(smac)):
-        if milptune[i] > 100 and smac[i] > 100:
+        if milptune[i] > cost_threshold and smac[i] > cost_threshold:
             hue.append("red")
             label.append("No Sol. Both Configs")
         elif milptune[i] < smac[i]:
@@ -34,19 +35,19 @@ def smac_vs_milptune(smac, milptune, output_file):
             label.append("SMAC Config Better")
 
     sns.scatterplot(
-        x=smac, y=milptune, hue=label, palette=["green", "cornflowerblue"], legend="full"
+        x=smac, y=milptune, hue=label, palette=["red", "cornflowerblue", "green"], legend="full"
     )
 
-    plt.plot(range(0, 100), range(0, 100), color="silver", linestyle="dashed")
-    plt.plot([100] * 120, range(0, 120), color="silver", linestyle="dashed")
-    plt.plot(range(0, 120), [100] * 120, color="silver", linestyle="dashed")
+    plt.plot(range(0, cost_threshold), range(0, cost_threshold), color="silver", linestyle="dashed")
+    plt.plot([cost_threshold] * int(cost_threshold * 1.2), range(0, int(cost_threshold * 1.2)), color="silver", linestyle="dashed")
+    plt.plot(range(0, int(cost_threshold * 1.2)), [cost_threshold] * int(cost_threshold * 1.2), color="silver", linestyle="dashed")
 
     plt.xlabel("SMAC Cost", fontsize=15)
     plt.ylabel("MILPTune Cost", fontsize=15)
-    plt.xlim([0, 120])
-    plt.ylim([0, 120])
-    plt.xticks([0, 20, 40, 60, 80, 100, 120], [0, 20, 40, 60, 80, "No Sol.", ""])
-    plt.yticks([0, 20, 40, 60, 80, 100, 120], [0, 20, 40, 60, 80, "No Sol.", ""])
+    plt.xlim([0, int(cost_threshold * 1.2)])
+    plt.ylim([0, int(cost_threshold * 1.2)])
+    plt.xticks([0, 2000, 4000, 6000, 8000, 10000, 12000], [0, 2000, 4000, 6000, 8000, "No Sol.", ""])
+    plt.yticks([0, 2000, 4000, 6000, 8000, 10000, 12000], [0, 2000, 4000, 6000, 8000, "No Sol.", ""])
     plt.legend(bbox_to_anchor=(0, 1.2), loc="upper left", ncol=2)
     plt.savefig(output_file, bbox_inches="tight")
 
@@ -100,4 +101,4 @@ if __name__ == "__main__":
             for k, v in cost.items():
                 results[k].append(v)
 
-    smac_vs_milptune(results["smac"], results["milptune"], f"smac_vs_milptune-{args.k}.pdf")
+    smac_vs_milptune(results["smac"], results["milptune"], f"smac_vs_milptune-{args.k}.pdf", cost_threshold=10000)

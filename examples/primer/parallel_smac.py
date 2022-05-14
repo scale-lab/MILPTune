@@ -1,4 +1,5 @@
 import argparse
+import pathlib
 
 import numpy as np
 import pyscipopt
@@ -7,7 +8,6 @@ from ConfigSpace.hyperparameters import (
     UniformFloatHyperparameter,
     UniformIntegerHyperparameter,
 )
-from pymongo import MongoClient
 from pyscipopt import Model as SCIPModel
 from smac.configspace import ConfigurationSpace
 from smac.facade.smac_hpo_facade import SMAC4HPO
@@ -15,7 +15,6 @@ from smac.scenario.scenario import Scenario
 
 from milptune.version import VERSION
 from milptune.db.connections import get_client
-
 
 class CapitalisedHelpFormatter(argparse.ArgumentDefaultsHelpFormatter):
     def add_usage(self, usage, actions, groups, prefix=None):
@@ -44,7 +43,7 @@ def solve_milp(params, instance):
     dual = model.getDualbound()
     _ = model.getSolvingTime()
 
-    return primal - dual
+    return primal
 
 
 if __name__ == "__main__":
@@ -63,20 +62,16 @@ if __name__ == "__main__":
         help="Shows program's version number and exit",
     )
     parser.add_argument(
+        "data_dir", type=str, help="Directory of training data"
+    )
+    parser.add_argument(
         "dataset_name", type=str, help="Dataset name in the DB to add these runs to"
     )
     args = parser.parse_args()
 
-    # Get instance from the DB
-    
-    client = get_client()
-    db = client.milptunedb
-    dataset = db[args.dataset_name]
-    doc = dataset.find_one_and_update(
-        {"configs": {"$exists": False}, "solver_lock": {"$exists": False}},
-        {"$set": {"solver_lock": True}},
-    )
-    instance_file = doc["path"]
+    instances_path = pathlib.Path(args.data_dir)
+    instances = list(map(str, instances_path.glob('*.mps.gz')))
+    instances = [[instance] for instance in instances]
 
     # Configuration
     cs = ConfigurationSpace()
@@ -122,7 +117,10 @@ if __name__ == "__main__":
             "runcount-limit": 8,  # max. number of function evaluations
             "cs": cs,  # configuration space
             "deterministic": True,
-            "instances": [[instance_file]],
+            "instances": instances,
+            "shared_model": True,
+            "input_psmac_dirs": "anonymous_0506*",
+            "output_dir": "anonymous_0506"
         }
     )
 
@@ -132,10 +130,20 @@ if __name__ == "__main__":
     )
 
     try:
-        print(instance_file)
         incumbent = smac.optimize()
     finally:
         incumbent = smac.solver.incumbent
+    
+    print(incumbent)
+    with open('incumbent_solo.json', 'w') as f:
+        import json
+        json.dump(str(incumbent), f)
+
+    exit()
+    # Save data to DB
+    client = get_client()
+    db = client.milptunedb
+    dataset = db[args.dataset_name]
 
     for (config_id, instance_id, seed, budget), (
         cost,
@@ -153,4 +161,4 @@ if __name__ == "__main__":
         }
         r = dataset.find_one_and_update({"path": instance_id}, {"$push": {"configs": config}})
 
-        print(r["_id"])
+        print(instance_id, r['_id'])

@@ -88,17 +88,22 @@ if __name__ == "__main__":
     output_file = os.path.join(
         args.output_dir, os.path.basename(args.instance).split(".")[0] + ".csv"
     )
+    milptune_configs_file = os.path.join(
+        args.output_dir, os.path.basename(args.instance).split(".")[0] + ".json"
+    )
 
     # 1. Run default
     run(None, args.instance, output_file, "default")
 
-    # 2. Run incumbent from SMAC
+    # # 2. Run incumbent from SMAC
     Process(target=run_smac, args=(args.instance, output_file)).start()
 
+    
     # 3. Run MILPTune configs
     configs, distances = get_configuration_parameters(
         instance_file=args.instance, dataset_name=args.dataset_name, n_neighbors=5, n_configs=1
     )
+
     for rank, config in enumerate(configs):
         run(
             config["params"],

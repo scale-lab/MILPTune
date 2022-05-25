@@ -23,4 +23,4 @@ def solve_milp(params=None, instance=""):
     dual = model.getDualbound()
     time = model.getSolvingTime()
 
-    return sol, primal - dual, time
+    return sol, primal, time

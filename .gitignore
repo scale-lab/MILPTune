@@ -62,3 +62,4 @@ smac3-output*
 *.pdf
 run_*
 *.pt
+*.log

@@ -6,31 +6,25 @@ channels:
   - pyg
 
 dependencies:
-  # Minimal dependencies for the competition
   - python=3.9
   - scip=7.0.3
   - ecole=0.7.3
   - numpy
   - pyscipopt
-
-  # additional conda dependencies go here
+  - libcusparse
   - scipy
   - joblib
   - ConfigSpace
   - filelock
-  # - pytorch=1.9.1
-  # - cudatoolkit=11.1
-  # - pytorch_geometric
-  # - pytorch-lightning=1.4.5
+  - pytorch
 
-  # additional pip dependencies go here
-  # - pip
-  # - pip:
-    #- pytorch-lightning
-    # - torch-scatter -f https://data.pyg.org/whl/torch-1.9.1+cu111.html
-    # - torch-sparse -f https://data.pyg.org/whl/torch-1.9.1+cu111.html
-    # - torch-geometric
-
-  # Please send us a snapshot of your environment as well
-  # to help us troubleshoot potential issues
-  # conda env export --no-builds
+  - pip
+  - pip:
+    - python-dotenv
+    - pymongo
+    - pytorch_metric_learning
+    - matplotlib
+    - smac
+    - torch-scatter -f https://data.pyg.org/whl/torch-1.11.0+cu113.html
+    - torch-sparse -f https://data.pyg.org/whl/torch-1.11.0+cu113.html
+    - torch-geometric

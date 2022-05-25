@@ -9,21 +9,20 @@ from milptune.train.helpers.gnn import InstanceEmbeddor
 from pytorch_metric_learning import distances, losses, miners
 from os.path import exists
 
-
 import numpy as np
 
 
-def train_set_size(dataset_name='1_item_placement', cost_threshold=1000):
+def train_set_size(dataset_name='2_load_balancing', cost_threshold=1000):
     client = get_client()
     db = client.milptunedb
     dataset = db[dataset_name]
 
-    r = dataset.count_documents({"bipartite": {"$exists": True}, "incumbent.0.cost": {"$lt": cost_threshold}})
+    r = dataset.count_documents({"bipartite": {"$exists": True}, "incumbent.0.cost": {"$lt": cost_threshold}}) 
 
     return r
 
 
-def load_batch(dataset_name='1_item_placement', n_instances=100, start_index=0, cost_threshold=100):
+def load_batch(dataset_name='2_load_balancing', n_instances=100, start_index=0, cost_threshold=1000):
     # check locally
     instances_file = f'{dataset_name}.instances.{n_instances}.{start_index}.{cost_threshold}.pt'
     costs_file = f'{dataset_name}.costs.{n_instances}.{start_index}.{cost_threshold}.pt'
@@ -45,8 +44,7 @@ def load_batch(dataset_name='1_item_placement', n_instances=100, start_index=0, 
         conss_features = from_mongo_binary(instance["bipartite"]["conss_features"])
         edge_indices = from_mongo_binary(instance["bipartite"]["edge_features"]["indices"])
         edge_values = from_mongo_binary(instance["bipartite"]["edge_features"]["values"])
-    
-        # print(vars_features, conss_features, edge_indices, edge_values)
+
         instance_data = MilpBipartiteData(
             var_feats=vars_features,
             cstr_feats=conss_features,
@@ -55,7 +53,7 @@ def load_batch(dataset_name='1_item_placement', n_instances=100, start_index=0, 
         )
         instances.append(instance_data)
         costs.append(instance['incumbent'][0]['cost'])
-    bins = range(0, 100, 5)
+    bins = range(0, 1000, 10)
     costs = np.digitize(costs, bins)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     instances = Batch.from_data_list(instances).to(device)
@@ -66,12 +64,13 @@ def load_batch(dataset_name='1_item_placement', n_instances=100, start_index=0, 
 
 
 if __name__ == '__main__':
+    torch.cuda.empty_cache()
     torch.manual_seed(31331)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    batch_size = 256
-    num_epochs = 100
+    batch_size = 64
+    num_epochs = 20
 
-    model = InstanceEmbeddor(256, 4, 128).to(device)
+    model = InstanceEmbeddor(128, 2, 64).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
     distance = distances.LpDistance(normalize_embeddings=False)
     loss_func = losses.TripletMarginLoss(margin=0.1, distance=distance)
@@ -80,32 +79,31 @@ if __name__ == '__main__':
     )
     
     # size = train_set_size()
-    size = 2599
+    size = 1727
 
     f = open('train.log', 'w')
     for epoch in range(1, num_epochs + 1):
         model.train()
-        for i in range(int(size / batch_size)):
+        for i in range(int(size / batch_size)+1):
             start_index = i * batch_size
             instances, costs = load_batch(n_instances=batch_size, start_index=start_index)
             c = Counter(costs.tolist())
-
             embeddings = model(instances.to(device))
             indices_tuple = mining_func(embeddings, costs)
-
             loss = loss_func(embeddings, costs, indices_tuple)
             loss.backward()
             optimizer.step()
-            log_line = "Epoch {} Iteration {}: Loss = {}, Number of mined triplets = {}".format(
-                    epoch, i, loss, mining_func.num_triplets
+            log_line = "Epoch {} Iteration {}: Loss = {}, Number of mined triplets = {}\t{}".format(
+                    epoch, i, loss, mining_func.num_triplets, c
                 )
             print(log_line)
             f.write(log_line + "\n")
             f.flush()
-            if epoch == 50:
+            if epoch == 10:
                 print('changing mining function .. ')
                 mining_func = miners.TripletMarginMiner(
                     margin=0.2, distance=distance, type_of_triplets="semihard"
-                )       
+                )
+            torch.save(model.state_dict(), f'model-{epoch}.pt')       
     torch.save(model.state_dict(), 'model.pt')
     f.close()

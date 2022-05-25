@@ -7,7 +7,7 @@ from sklearn.neighbors import KNeighborsTransformer
 
 from milptune.db.connections import get_client
 from milptune.features.bipartite import get_milp_bipartite
-from milptune.train.helpers.gnn import ConfigPerformanceRegressor
+from milptune.train.helpers.gnn import InstanceEmbeddor
 from milptune.train.helpers.data import MilpBipartiteData
 
 
@@ -54,7 +54,7 @@ def _load_cached_model_(dataset_name: str, device=torch.device('cpu')):
         print('loading local cached model')
         with open(model_params_file, 'r') as f:
             params = json.load(f)
-        model = ConfigPerformanceRegressor(params['embedding_dim'], params['n_gnn_layers'], params['gnn_hidden_dim']).to(device)
+        model = InstanceEmbeddor(params['embedding_dim'], params['n_gnn_layers'], params['gnn_hidden_dim']).to(device)
         model.load_state_dict(torch.load(local_cache_file, map_location=device))
         model.eval()
         return model
@@ -69,7 +69,7 @@ def _load_model_from_db_(dataset_name: str, device=torch.device('cpu')):
     r = dataset.find_one({f"{dataset_name}.model": {"$exists": True}})
     if not r:
         raise Exception("Cannot find trained model")
-    model = ConfigPerformanceRegressor(
+    model = InstanceEmbeddor(
         r[dataset_name]['dims']['embedding_dim'],
         r[dataset_name]['dims']['n_gnn_layers'],
         r[dataset_name]['dims']['gnn_hidden_dim']).to(torch.device('cpu'))

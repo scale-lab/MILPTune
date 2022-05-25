@@ -11,14 +11,14 @@ class MilpBipartiteData(Data):
         cstr_feats,
         edge_indices,
         edge_values,
+        force_cpu=False
     ):
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        device = torch.device("cuda" if torch.cuda.is_available() and not force_cpu else "cpu")
         super(MilpBipartiteData, self).__init__()
         self.var_feats = torch.tensor(var_feats, dtype=torch.float32, device=device)
         self.cstr_feats = torch.tensor(cstr_feats, dtype=torch.float32, device=device)
         self.edge_index = torch.tensor(edge_indices.astype(np.int64), dtype=torch.long, device=device)
-        self.edge_attr = torch.tensor(edge_values, dtype=torch.float32, device=device)  # .unsqueeze(1)
-        # self.y = torch.tensor([label], dtype=torch.float32)
+        self.edge_attr = torch.tensor(edge_values, dtype=torch.float32, device=device)
         self.num_nodes = self.var_feats.shape[1] + self.cstr_feats.shape[1]
         self.var_batch_el = torch.zeros((self.var_feats.shape[0]), dtype=torch.long, device=device)
         self.cstr_batch_el = torch.zeros((self.cstr_feats.shape[0]), dtype=torch.long, device=device)

@@ -1,4 +1,5 @@
 from typing import Tuple
+from torch.utils.checkpoint import checkpoint, checkpoint_sequential
 import torch
 import torch.nn
 import torch_geometric as tg
@@ -6,23 +7,21 @@ import torch.nn.functional as F
 
 
 
-class ConfigPerformanceRegressor(torch.nn.Module):
+class InstanceEmbeddor(torch.nn.Module):
     def __init__(self, config_dim, n_gnn_layers=4, gnn_hidden_dim=64):
-        super(ConfigPerformanceRegressor, self).__init__()
+        super(InstanceEmbeddor, self).__init__()
 
         self.milp_gnn = MilpGNN(
             n_gnn_layers=n_gnn_layers,
             hidden_dim=(gnn_hidden_dim, gnn_hidden_dim),
         )
         self.config_emb = ConfigEmbedding(in_dim=config_dim, out_dim=8)
-        self.regression_head = RegressionHead(
+        self.regression_head = FCLayers(
             in_dim=4 * gnn_hidden_dim, hidden_dim=8 * gnn_hidden_dim, out_dim=config_dim
         )
 
     def forward(self, instance_batch):
         graph_embedding = self.milp_gnn(instance_batch)
-        # mu_pred, sig_pred = self.regression_head(graph_embedding)
-        # return torch.stack((mu_pred, sig_pred), axis=-1)
         x = self.regression_head(graph_embedding)
         return x
 
@@ -139,6 +138,7 @@ class GNNFwd(torch.nn.Module):
         edge_attr = data.edge_attr.unsqueeze(-1)
 
         x_node_ = self.node_gnn(x=(x_cstr, x_node), edge_index=data.edge_index, edge_weight=edge_attr)
+        # x_node_ = checkpoint(self.node_gnn, {'x': (x_cstr, x_node), 'edge_index': data.edge_index, 'edge_weight':edge_attr})
         x_cstr_ = self.cstr_gnn(
             x=(x_node, x_cstr),
             edge_index=data.edge_index.flip(-2),
@@ -177,9 +177,9 @@ class ConfigEmbedding(torch.nn.Module):
         return x
 
 
-class RegressionHead(torch.nn.Module):
+class FCLayers(torch.nn.Module):
     def __init__(self, in_dim=2 * 8, hidden_dim=None, out_dim=2):
-        super(RegressionHead, self).__init__()
+        super(FCLayers, self).__init__()
         if not hidden_dim:
             hidden_dim = 4 * in_dim
 
@@ -187,16 +187,10 @@ class RegressionHead(torch.nn.Module):
 
         self.lin1 = torch.nn.Linear(in_features=in_dim, out_features=hidden_dim)
         self.lin2 = torch.nn.Linear(in_features=hidden_dim, out_features=out_dim)
-        # self.lin3 = torch.nn.Linear(in_features=hidden_dim, out_features=out_dim)
-        # self.lin3_mu = torch.nn.Linear(in_features=hidden_dim, out_features=out_dim)
-        # self.lin3_sig = torch.nn.Linear(in_features=hidden_dim, out_features=out_dim)
+
 
     def forward(self, x):
         x = self.lin1(x).relu_()
         x = self.lin2(x).relu_()
-        # x = self.lin3(x).relu_()
-        # mu = self.lin3_mu(x)
-        # sig = self.lin3_sig(x).exp()
 
-        # return mu, sig
         return x

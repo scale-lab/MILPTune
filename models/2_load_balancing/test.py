@@ -8,9 +8,10 @@ from milptune.train.helpers.gnn import InstanceEmbeddor
 from os.path import exists
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
+import numpy as np
 
 
-def train_set_size(dataset_name='1_item_placement', cost_threshold=1000):
+def train_set_size(dataset_name='2_load_balancing', cost_threshold=1000):
     client = get_client()
     db = client.milptunedb
     dataset = db[dataset_name]
@@ -20,13 +21,13 @@ def train_set_size(dataset_name='1_item_placement', cost_threshold=1000):
     return r
 
 
-def load_batch(dataset_name='1_item_placement', n_instances=100, start_index=0, cost_threshold=1000, load_local=True, use_gpu=False):
-    device = torch.device("cuda" if torch.cuda.is_available() and use_gpu else "cpu")
+def load_batch(dataset_name='2_load_balancing', n_instances=100, start_index=0, cost_threshold=1000, load_local=True):
     # check locally
     instances_file = f'{dataset_name}.instances.{n_instances}.{start_index}.{cost_threshold}.pt'
     costs_file = f'{dataset_name}.costs.{n_instances}.{start_index}.{cost_threshold}.pt'
+    print(instances_file)
     if exists(instances_file) and exists(costs_file) and load_local:
-        return torch.load(instances_file, map_location=device), torch.load(costs_file, map_location=device)
+        return torch.load(instances_file, 'cpu'), torch.load(costs_file, 'cpu')
 
     print('loading from data store ..')
     client = get_client()
@@ -49,7 +50,7 @@ def load_batch(dataset_name='1_item_placement', n_instances=100, start_index=0, 
             var_feats=vars_features,
             cstr_feats=conss_features,
             edge_indices=edge_indices,
-            edge_values=edge_values,
+            edge_values=edge_values
         )
         instances.append(instance_data)
         costs.append(instance['incumbent'][0]['cost'])
@@ -61,15 +62,17 @@ def load_batch(dataset_name='1_item_placement', n_instances=100, start_index=0, 
     return instances, costs
 
 
+
 def plot_tsne(X, y, file_name, colormap=plt.cm.GnBu):
     plt.figure(figsize=(9, 6))
 
     # clean the figure
     plt.clf()
 
-    tsne = TSNE(perplexity=5)
+    tsne = TSNE(perplexity=10)
     X_embedded = tsne.fit_transform(X)
-    plt.scatter(X_embedded[:, 0], X_embedded[:, 1], c=y, cmap=colormap)
+    cond = y > 400
+    plt.scatter(X_embedded[cond, 0], X_embedded[cond, 1], c=y[cond], cmap=colormap)
 
     plt.xticks(())
     plt.yticks(())
@@ -80,23 +83,45 @@ def plot_tsne(X, y, file_name, colormap=plt.cm.GnBu):
     plt.savefig(file_name)
 
 if __name__ == '__main__':
-    use_gpu = False
-    device = torch.device("cuda" if torch.cuda.is_available() and use_gpu else "cpu")
-
     torch.manual_seed(31331)
-    batch_size = 10000
-
-    instances, costs = load_batch(n_instances=batch_size, start_index=0, cost_threshold=100)
-    model = InstanceEmbeddor(256, 4, 128).to(device)
-    model.eval()
-    embeddings_before = model(instances.to(device))
-    plot_tsne(embeddings_before.cpu().detach().numpy(), costs.cpu().detach().numpy(), 'embeddings_before.pdf')
+    model = InstanceEmbeddor(128, 2, 64).to(torch.device('cuda'))
+    batch_size = 64
     
-    instances, costs = load_batch(n_instances=batch_size, start_index=0, cost_threshold=100)
-    model.load_state_dict(torch.load('model.pt', map_location=device))
+    all_embeddings = []
+    all_costs = []
+
+    for i in range(int(1727 / batch_size) + 1):
+        instances, costs = load_batch(n_instances=batch_size, start_index=i * batch_size, cost_threshold=1000)
+        all_costs.extend(costs.cpu().tolist())
+        model.eval()
+        embeddings_before = model(instances.to(torch.device('cuda')))
+        all_embeddings.append(embeddings_before.cpu().detach())
+        
+        del instances
+        del costs
+        del embeddings_before
+        torch.cuda.empty_cache()
+    
+    all_embeddings = torch.cat(all_embeddings)
+    print(all_embeddings.shape)
+    
+    plot_tsne(all_embeddings.cpu().detach().numpy(), np.array(all_costs), 'embeddings_before.pdf')
+
+    model.load_state_dict(torch.load('model.pt'))
     model.eval()
-    mode = model.to(device)
-    embeddings_after = model(instances.to(device))
-    plot_tsne(embeddings_after.cpu().detach().numpy(), costs.cpu().detach().numpy(), 'embeddings_after.pdf')
+    for i in range(int(1727 / batch_size) + 1):
+        instances, costs = load_batch(n_instances=batch_size, start_index=i * batch_size, cost_threshold=1000)
+        all_costs.extend(costs.cpu().tolist())
+        model.eval()
+        embeddings_after = model(instances.to(torch.device('cuda')))
+        all_embeddings.append(embeddings_after.cpu().detach())
+        
+        del instances
+        del costs
+        del embeddings_after
+        torch.cuda.empty_cache()
+    
+    all_embeddings = torch.cat(all_embeddings)
+    plot_tsne(all_embeddings.cpu().detach().numpy(), np.array(all_costs), 'embeddings_after.pdf')
     
     

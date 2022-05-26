@@ -53,15 +53,11 @@ site/
 smac3-output*
 *.csv
 *.json
-*.txt
 *.npy
 *.png
 *.joblib
 *.gz
-*.env
 *.pdf
 run_*
-*.pt
 *.log
-models
-examples
+.git

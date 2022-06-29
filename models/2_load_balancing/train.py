@@ -85,6 +85,7 @@ if __name__ == '__main__':
     for epoch in range(1, num_epochs + 1):
         model.train()
         for i in range(int(size / batch_size)+1):
+            optimizer.zero_grad()
             start_index = i * batch_size
             instances, costs = load_batch(n_instances=batch_size, start_index=start_index)
             c = Counter(costs.tolist())

@@ -2,11 +2,12 @@ import json
 import os
 import numpy as np
 import torch
-
+import pickle
 from sklearn.neighbors import KNeighborsTransformer
 
 from milptune.db.connections import get_client
 from milptune.features.bipartite import get_milp_bipartite
+from milptune.features.shallow import get_milp_shallow
 from milptune.train.helpers.gnn import InstanceEmbeddor
 from milptune.train.helpers.data import MilpBipartiteData
 
@@ -20,6 +21,19 @@ def _check_(test, array):
     )  # noqa
 
 
+def _load_cached_shallow_embeddings_(dataset_name: str, device=torch.device('cpu')):
+    local_cache_file = os.path.expanduser(f'~/MILPTune/models/{dataset_name}/{dataset_name}.shallow.all.pt')
+    mapping_file = os.path.expanduser(f'~/MILPTune/models/{dataset_name}/{dataset_name}.shallow.mapping.pkl')
+    if os.path.exists(local_cache_file) and os.path.exists(mapping_file):
+        print('loading local cached embeddings')
+        embedded_instances = torch.load(local_cache_file)
+        embedded_instances = torch.unique(embedded_instances, dim=0)
+        with open(mapping_file, 'rb') as f:
+            mapping = pickle.load(f)
+        return embedded_instances, mapping
+    print('cached embeddings not found')
+    return None, None
+
 def _load_cached_embeddings_(dataset_name: str, device=torch.device('cpu')):
     local_cache_file = os.path.expanduser(f'~/MILPTune/models/{dataset_name}/{dataset_name}.all.pt')
     if os.path.exists(local_cache_file):
@@ -29,6 +43,29 @@ def _load_cached_embeddings_(dataset_name: str, device=torch.device('cpu')):
         return embedded_instances
     print('cached embeddings not found')
 
+
+def _load_shallow_embeddings_from_db_(dataset_name: str, device=torch.device('cpu')):
+    local_cache_file = os.path.expanduser(f'~/MILPTune/models/{dataset_name}/{dataset_name}.shallow.all.pt')
+    mapping_file = os.path.expanduser(f'~/MILPTune/models/{dataset_name}/{dataset_name}.shallow.mapping.pkl')
+    client = get_client()
+    db = client.milptunedb
+    dataset = db[dataset_name]
+    r = dataset.find(
+        {"shallow": {"$exists": True}, "configs": {"$exists": True}}, sort=[("path", 1)]
+    )
+    embedded_instances = []
+    
+    mapping = {}
+    for i, instance in enumerate(r):
+        mapping[i] = instance['path']
+        embedded_instances.append(instance["shallow"])
+    embedded_instances = torch.tensor(embedded_instances)
+    
+    torch.save(embedded_instances, local_cache_file)
+    with open(mapping_file, 'wb') as f:
+        pickle.dump(mapping, f)
+
+    return embedded_instances, mapping
 
 def _load_embeddings_from_db_(dataset_name: str, device=torch.device('cpu')):
     local_cache_file = os.path.expanduser(f'~/MILPTune/models/{dataset_name}/{dataset_name}.all.pt')
@@ -77,6 +114,54 @@ def _load_model_from_db_(dataset_name: str, device=torch.device('cpu')):
     model.eval()
 
     return model
+
+
+def get_shallow_configuration_parameters(instance_file: str, dataset_name: str, load_cache=True, n_neighbors=5, n_configs=5):
+    embedded_instances = None
+    mapping = None
+    if load_cache:
+        embedded_instances, mapping = _load_cached_shallow_embeddings_(dataset_name)
+    if embedded_instances is None or mapping is None:
+        embedded_instances, mapping = _load_shallow_embeddings_from_db_(dataset_name)
+    
+    # 1. Extract feature vector
+    embedding = get_milp_shallow(instance_file).reshape(1, -1)
+
+    # 2. Run knn
+    transformer = KNeighborsTransformer(n_neighbors=n_neighbors, mode="distance", n_jobs=-1)
+    transformer.fit(embedded_instances)
+    distances, neighbors = transformer.kneighbors(embedding, return_distance=True)
+    neighbors = embedded_instances[neighbors[0], :]
+    neighbors = list(map(lambda n: n.tolist(), neighbors))
+
+    # 2. Run knn
+    transformer = KNeighborsTransformer(n_neighbors=n_neighbors, mode="distance", n_jobs=-1)
+    transformer.fit(embedded_instances)
+    distances, neighbors = transformer.kneighbors(embedding, return_distance=True)
+    neighbors = embedded_instances[neighbors[0], :]
+    neighbors = list(map(lambda n: n.tolist(), neighbors))
+
+    # 3. Get all configs of the k nearest neighbors
+    client = get_client()
+    db = client.milptunedb
+    dataset = db[dataset_name]
+    distances = distances.flatten()
+    configs, config_distances = [], []
+    
+    for index, neighbor in enumerate(neighbors):
+        embedding_index = _check_(neighbor, embedded_instances)[0]
+        # We do this query one at a time (and not using Mongo $in operator to preserve order)
+        r = dataset.find_one({"path": mapping[embedding_index]}, projection=["configs"])
+        instance_configs = sorted(r["configs"], key=lambda c: c["cost"])
+        configs.extend(instance_configs[:n_configs])
+        config_distances.extend([distances[index]] * len(instance_configs[:n_configs]))
+
+    # 4. Suggest `n_configs` configurations with lowest cost from all neighbors
+    suggested = list(zip(configs, config_distances))
+    suggested = sorted(suggested, key=lambda c: (c[1], c[0]["cost"]))
+    suggested_configs, distances = zip(*suggested)
+
+    return suggested_configs, distances
 
 
 def get_configuration_parameters(instance_file: str, dataset_name: str, load_cache=True, n_neighbors=5, n_configs=5):

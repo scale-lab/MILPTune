@@ -41,6 +41,7 @@ def DF(M, P, dataset_name='3_anonymous'):
     
     for i, j in list(combinations(range(m), r=2)):
         labels = []
+        weights = []
         for inst_index in range(n):
             if P[inst_index][i] < P[inst_index][j]:
                 labels.append(i)
@@ -49,12 +50,15 @@ def DF(M, P, dataset_name='3_anonymous'):
             else:
                 # tie: random break
                 labels.append(random.choice([i, j]))
+            
+            # add weights to the samples
+            weights.append(abs(P[inst_index][i] - P[inst_index][j]))
         
-        # now we have M and labels
+        # Now we have M and labels (in addition to sample weights)
         i_j_df = RandomForestClassifier()
-        i_j_df.fit(M, labels)
+        i_j_df.fit(M, labels, sample_weight=weights)    # pass weights to the fitting function
 
-        joblib.dump(i_j_df, f'models/{dataset_name}.{i}-{j}.rf')
+        joblib.dump(i_j_df, f'models-rf/{dataset_name}.{i}-{j}.rf')
  
 
 def get_configuration_parameters(instance_file: str, dataset_name: str = '3_anonymous', m=53):
@@ -64,7 +68,7 @@ def get_configuration_parameters(instance_file: str, dataset_name: str = '3_anon
     # load the model from disk
     predictions = []
     for i, j in list(combinations(range(m), r=2)):
-        i_j_df = joblib.load(f'models/{dataset_name}.{i}-{j}.rf')
+        i_j_df = joblib.load(f'models-rf/{dataset_name}.{i}-{j}.rf')
         predictions.extend(i_j_df.predict(embedding))
     
     # Voting
@@ -72,6 +76,6 @@ def get_configuration_parameters(instance_file: str, dataset_name: str = '3_anon
     pred = c.most_common(1)[0][0]
 
     # Retrieving config
-    C = joblib.load(f'models/{dataset_name}.C.arr')
+    C = joblib.load(f'models-rf/{dataset_name}.C.arr')
 
     return C[pred]

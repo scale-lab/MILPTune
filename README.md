@@ -149,4 +149,4 @@ We provide `evaluate.sh` to run the evaluation on all instances in a given direc
 ```
 
 ## License
-BSD 3-Clause License. See [LICENSE](LICENSE) file. See licenses of some used dependencies in the [milptune/](milptune) folder.
+BSD 3-Clause License. See [LICENSE](LICENSE) file. See licenses of some used dependencies in the [milptune folder](milptune).

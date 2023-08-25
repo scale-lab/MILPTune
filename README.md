@@ -1,4 +1,10 @@
-# MILPTune
+# [Automatic MILP Solver Configuration by Learning Problem Similarities](https://rdcu.be/dgSRv)
+
+A large number of real-world optimization problems can be formulated as Mixed IntegerLinear Programs (MILP). MILP solvers expose numerous conﬁguration parameters to controltheir internal algorithms. Solutions, and their associated costs or runtimes, are signiﬁcantlyaffected by the choice of the conﬁguration parameters, even when problem instances havethe same number of decision variables and constraints. On one hand, using the default solverconﬁguration leads to suboptimal solutions. On the other hand, searching and evaluatinga large number of conﬁgurations for every problem instance is time-consuming and, insome cases, infeasible. In this study, we aim to predict conﬁguration parameters for unseenproblem instances that yield lower-cost solutions without the time overhead of searching-and-evaluating conﬁgurations at the solving time. Toward that goal, we ﬁrst investigate thecost correlation of MILP problem instances that come from the same distribution when solvedusing different conﬁgurations. We show that instances that have similar costs using one solverconﬁguration also have similar costs using another solver conﬁguration in the same runtimeenvironment. After that, we present a methodology based on Deep Metric Learning to learnMILP similarities that correlate with their ﬁnal solutions’ costs. At inference time, given a newproblem instance, it is ﬁrst projected into the learned metric space using the trained model, andconﬁguration parameters are instantly predicted using previously-explored conﬁgurationsfrom the nearest neighbor instance in the learned embedding space. Empirical results onreal-world problem benchmarks show that our method predicts conﬁguration parametersthat improve solutions’ costs by up to 38% compared to existing approaches.
+
+![image](https://github.com/scale-lab/MILPTune/assets/9287641/a157f272-9a3d-4318-8441-dc43d86526f4)
+
+![image](https://github.com/scale-lab/MILPTune/assets/9287641/1b044d4f-d715-4300-9653-fadd9b8c60a5)
 
 ## Getting Started
 
@@ -130,3 +136,17 @@ We provide `evaluate.sh` to run the evaluation on all instances in a given direc
 ./evaluate.sh /path/to/dataset/valid/ <dataset-name> <output-dir>
 ```
 
+## Citation
+```
+@article{hosny2023automatic,
+  title={Automatic MILP solver configuration by learning problem similarities},
+  author={Hosny, Abdelrahman and Reda, Sherief},
+  journal={Annals of Operations Research},
+  pages={1--28},
+  year={2023},
+  publisher={Springer}
+}
+```
+
+## License
+BSD 3-Clause License. See [LICENSE](LICENSE) file. See licenses of some used dependencies in the [milptune/](milptune) folder.

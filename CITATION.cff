@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If this code helped your research, please cite it as below."
+authors:
+- family-names: "Hosny"
+  given-names: "Abdelrahman"
+  orcid: "https://orcid.org/0000-0003-4020-7973"
+- family-names: "Reda"
+  given-names: "Sherief"  
+title: "Automatic MILP solver conﬁguration by learning problem similarities"
+version: 1.0.0
+doi: 10.1007/s10479-023-05508-x
+date-released: 2023-07-14
+url: "https://github.com/scale-lab/MILPTune"
+preferred-citation:
+  type: article
+  authors:
+  - family-names: "Hosny"
+    given-names: "Abdelrahman"
+    orcid: "https://orcid.org/0000-0003-4020-7973"
+  - family-names: "Reda"
+    given-names: "Sherief" 
+  doi: "10.1007/s10479-023-05508-x"
+  journal: "Annals of Operations Research"
+  month: 7
+  start: 1 # First page number
+  end: 28 # Last page number
+  title: "Automatic MILP solver conﬁguration by learning problem similarities"
+  year: 2023
+  publisher: Springer
